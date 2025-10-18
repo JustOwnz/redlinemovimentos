@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RedLine Performance — Gestão</title>
+  <meta name="theme-color" content="#2563eb" />
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1a34; --panel2:#0d1730; --text:#e6eefc; --muted:#a7b5d8;
+      --accent:#2563eb; --accent-2:#1d4ed8; --border:rgba(255,255,255,.10);
+      --positive:#22c55e; --warning:#f59e0b; --danger:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1100px 600px at 80% -10%,rgba(37,99,235,.15),transparent 55%),var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Arial;font-size:14px;min-height:100vh;display:flex;justify-content:center;padding:16px}
+    .app{width:min(1250px,100%);min-height:92vh;background:linear-gradient(180deg,var(--panel)0%,var(--panel2)100%);border:1px solid rgba(255,255,255,.06);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+    .header,.footer{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .footer{margin-top:auto;border-top:1px solid rgba(255,255,255,.06);border-bottom:none;background:var(--panel);justify-content:center;color:var(--muted);font-size:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:42px;height:42px;border-radius:10px;overflow:hidden;box-shadow:0 6px 24px rgba(37,99,235,.35)}
+    .logo img{width:100%;height:100%;object-fit:cover;display:block}
+    .brand-title{font-weight:900;letter-spacing:.2px}
+    .brand-sub{font-size:12px;color:var(--muted)}
+
+    .btn-primary{appearance:none;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#fff;padding:10px 14px;border-radius:10px;font-weight:900;cursor:pointer;box-shadow:0 6px 20px rgba(37,99,235,.35);transition:transform .05s ease}
+    .btn-primary:active{transform:translateY(1px)}
+    .btn-secondary{appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#e5e7eb;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
+    .bonus-btn{appearance:none;border:1px solid rgba(255,255,255,.18);background:rgba(37,99,235,.10);color:#cfe0ff;border-radius:10px;padding:6px 10px;cursor:pointer}
+    .bonus-btn.on{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#0b1222}
+
+    .columns{flex:1;display:grid;grid-template-columns:1fr;gap:14px;padding:14px;overflow:auto}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px}
+    .section-title{font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+
+    .input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:10px;font-size:14px;transition:.2s border-color}
+    .input:focus{outline:none;border-color:rgba(37,99,235,.6)}
+    .input.center{text-align:center}
+
+    table{width:100%;border-collapse:separate;border-spacing:0 6px}
+    th{color:var(--muted);font-size:12px;text-align:left;padding:6px 8px}
+    td{padding:6px 8px;vertical-align:middle}
+
+    /* Retiradas: grelha */
+    .wgrid{display:grid;grid-template-columns:140px 110px 160px 160px 1fr 200px 120px;gap:8px;align-items:center}
+    .wgrid .h{color:var(--muted);font-size:12px}
+    .row{display:contents}
+    .x-actions{display:flex;gap:6px;justify-content:flex-end}
+
+    /* Stats (cards) */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:8px}
+    .stat{position:relative;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:transform .2s ease, box-shadow .2s ease}
+    .stat .label{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;margin-bottom:4px}
+    .stat .value{font-weight:900;letter-spacing:.2px}
+    .stat.blue{background:linear-gradient(180deg,rgba(37,99,235,.12),rgba(37,99,235,.05));border-color:rgba(37,99,235,.25)}
+    .stat.amber{background:linear-gradient(180deg,rgba(245,158,11,.12),rgba(245,158,11,.05));border-color:rgba(245,158,11,.25)}
+    .stat.green{background:linear-gradient(180deg,rgba(34,197,94,.12),rgba(34,197,94,.05));border-color:rgba(34,197,94,.25)}
+    .stat:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(37,99,235,.25)}
+
+    /* Nome/Cargo */
+    .emp-name{font-weight:800}
+    .emp-role{display:block;font-size:12px;color:var(--muted)}
+    .emp-iban{display:block;font-size:12px;color:var(--muted)}
+    .role-badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:11px;letter-spacing:.2px}
+    .role-ceo{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.35);color:#fecaca}
+    .role-gerente{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.35);color:#a7f3d0}
+    .role-chefe{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.35);color:#bfdbfe}
+    .role-reprogramador{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.35);color:#e9d5ff}
+    .role-senior{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.35);color:#fde68a}
+    .role-junior{background:rgba(100,116,139,.15);border-color:rgba(100,116,139,.35);color:#cbd5e1}
+    .role-estagiario{background:rgba(255,255,255,.08);border-color:var(--border);color:#e5e7eb}
+
+    .td-num{text-align:center}
+    .td-num .cell{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .td-num .value{font-weight:800}
+    .td-num .input{width:160px}
+
+    .toolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;align-items:start}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{margin:0;font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header" style="justify-content:space-between;align-items:center;">
+      <div class="brand">
+        <div class="logo" aria-label="RedLine Performance logo">
+          <img src="https://i.imgur.com/RwYDIAZ.png" alt="Logotipo RedLine Performance" />
+        </div>
+        <div>
+          <div class="brand-title">RedLine Performance</div>
+          <div class="brand-sub">Gestão de Pagamentos</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="clock" class="pill"></span>
+      </div>
+    </header>
+
+    <div class="columns">
+      <!-- Retiradas -->
+      <section class="panel">
+        <div class="section-title">💸 Retiradas de Dinheiro</div>
+        <div class="wgrid" id="wgrid">
+          <div class="h">Data</div>
+          <div class="h">Hora</div>
+          <div class="h">Valor Atual</div>
+          <div class="h">Valor Retirado</div>
+          <div class="h">Motivo / Observações</div>
+          <div class="h">Responsável</div>
+          <div class="h"></div>
+          <div class="row">
+            <input type="date" class="input w-date" required readonly />
+            <input type="time" class="input w-time" required readonly />
+            <input type="number" step="0.01" inputmode="decimal" class="input w-atual" placeholder="0" required />
+            <input type="number" step="0.01" inputmode="decimal" class="input w-valor" placeholder="0" required />
+            <input type="text" class="input w-motivo" placeholder="motivo da retirada" required />
+            <input type="text" class="input w-resp" placeholder="responsável" required />
+            <div class="x-actions">
+              <button class="btn-secondary" id="addW">+ Adicionar</button>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat blue">
+            <div class="label">💼 Saldo Atual</div>
+            <div class="value" id="sumSaldoAtual">0,00 €</div>
+          </div>
+          <div class="stat amber">
+            <div class="label">💸 Total Retirado</div>
+            <div class="value" id="sumTotalRet">0,00 €</div>
+          </div>
+          <div class="stat green">
+            <div class="label">🧮 Novo Saldo</div>
+            <div class="value" id="sumNovoSaldo">0,00 €</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;margin-top:10px;">
+          <button id="emitW" class="btn-primary">Emitir Retiradas</button>
+        </div>
+      </section>
+
+      <!-- Configuração -->
+      <section class="panel">
+        <div class="section-title">⚙️ Configuração</div>
+        <div class="toolbar">
+          <div class="field">
+            <label>Percentual de comissão (%)</label>
+            <input id="pct" type="number" class="input" value="30" min="0" max="100" />
+          </div>
+          <div class="field">
+            <label>Bónus (opcional) por funcionário</label>
+            <input id="bonus" type="number" class="input" value="0" min="0" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabela de Pagamentos -->
+      <section class="panel">
+        <div class="section-title">📋 Tabela de Pagamentos</div>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Funcionário</th>
+                <th>IBAN</th>
+                <th style="text-align:center">Valor Faturado</th>
+                <th style="text-align:center">Valor a Receber</th>
+                <th style="text-align:center">Valor do Bónus</th>
+                <th style="text-align:center">Bónus?</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+            <tfoot>
+              <tr>
+                <th style="text-align:left;color:var(--muted)">Total</th>
+                <th></th>
+                <th style="text-align:center"><span id="colTotFaturado">0,00 €</span></th>
+                <th style="text-align:center"><span id="colTotReceber">0,00 €</span></th>
+                <th style="text-align:center"><span id="colTotBonus">0,00 €</span></th>
+                <th></th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- Totais -->
+      <section class="panel" id="totalsPanel">
+        <div class="section-title">📊 Totais</div>
+        <div class="stats">
+          <div class="stat blue">
+            <div class="label">📈 Total Faturado</div>
+            <div class="value" id="totFaturado">0,00 €</div>
+          </div>
+          <div class="stat">
+            <div class="label">💼 Total a Pagar (Salários)</div>
+            <div class="value" id="totSalarios">0,00 €</div>
+          </div>
+          <div class="stat amber">
+            <div class="label">🎁 Total em Prémios</div>
+            <div class="value" id="totPremios">0,00 €</div>
+          </div>
+          <div class="stat">
+            <div class="label">🧮 Total (Salários + Prémios)</div>
+            <div class="value" id="totSalariosPremios">0,00 €</div>
+          </div>
+          <div class="stat green">
+            <div class="label">💹 Lucros</div>
+            <div class="value" id="totLucro">0,00 €</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div style="display:flex;justify-content:center;align-items:center;">
+          <button id="emit" class="btn-primary" style="min-width:240px">Emitir Pagamentos</button>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">© 2025 RedLine Performance — Gestão</footer>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1426532213318615211/774rpegP6ROqfEEjPnW34AiXfj4keCH8qEZvZJuE4M2q01BUjDeWm9of97NW8Ta3FswB';
+
+    // Lista fixa de colaboradores (edita aqui) — IBAN não é editável via UI
+    const EMPLOYEES = [
+      { name: 'Moura', cargo: 'CEO', iban:'' },
+      { name: 'Matos', cargo: 'Gerente', iban:'' },
+      { name: 'James', cargo: 'Mecanico Junior', iban:'503802' },
+      { name: 'Konkista', cargo: 'Mecanico Junior', iban:'411028' },
+      { name: 'João Marques', cargo: 'Mecanico Junior', iban:'501126' },
+      { name: 'Raposinha', cargo: 'Mecanico Estagiario', iban:'Sem dados' },	  
+      { name: 'Bruno Araujo', cargo: 'Mecanico Estagiario', iban:'Sem dados' },
+      { name: 'Tiago', cargo: 'Mecanico Estagiario', iban:'Sem dados' },
+    ];
+
+    // ====== Utils ======
+    const gid = (id)=>document.getElementById(id);
+    const euro = (n)=> (isNaN(n)?0:n).toLocaleString('pt-PT',{style:'currency',currency:'EUR'});
+
+    function roleClass(cargo=''){
+      const norm=(cargo||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();
+      if(norm==='ceo') return 'role-ceo';
+      if(norm==='gerente') return 'role-gerente';
+      if(norm==='chefe de oficina') return 'role-chefe';
+      if(norm==='reprogramador') return 'role-reprogramador';
+      if(norm==='mecanico senior') return 'role-senior';
+      if(norm==='mecanico junior') return 'role-junior';
+      if(norm==='mecanico estagiario') return 'role-estagiario';
+      return '';
+    }
+
+    // ====== Pagamentos ======
+    function makeRow(emp){
+      const {name='', cargo='', iban=''} = emp||{};
+      const tr=document.createElement('tr');
+      tr.dataset.bonus='0';
+      tr.dataset.iban = iban; // para usar no Discord
+      const cargoBadge = cargo ? `<span class="role-badge ${roleClass(cargo)}">${cargo}</span>` : '';
+      tr.innerHTML=`
+        <td>
+          <span class="emp-name">${name}</span>
+          ${cargo?`<small class="emp-role">${cargoBadge}</small>`:''}
+        </td>
+        <td><small class="emp-iban">${iban||'—'}</small></td>
+        <td class="td-num">
+          <div class="cell">
+            <div class="value val-fat">0,00 €</div>
+            <input class="input center faturado" type="number" value="0"/>
+          </div>
+        </td>
+        <td class="td-num"><div class="cell"><div class="value val-receber">0,00 €</div></div></td>
+        <td class="td-num"><div class="cell"><div class="value val-bonus">0,00 €</div></div></td>
+        <td style="text-align:center"><button class="bonus-btn">Bónus</button></td>
+        <td><button class="btn-secondary rm">Remover</button></td>`;
+      tr.querySelector('.rm').onclick=()=>{tr.remove(); recalcTotals();};
+      const fatInput = tr.querySelector('.faturado');
+      fatInput.oninput=()=>{recalcRow(tr); recalcTotals();};
+      tr.querySelector('.bonus-btn').onclick=(e)=>{const on=tr.dataset.bonus==='1'; tr.dataset.bonus=on?'0':'1'; e.currentTarget.classList.toggle('on'); recalcRow(tr); recalcTotals();};
+      return tr;
+    }
+
+    function recalcRow(tr){
+      const pct = parseFloat(gid('pct')?.value||0);
+      const bonus = parseFloat(gid('bonus')?.value||0);
+      const faturado = parseFloat(tr.querySelector('.faturado')?.value||0);
+      const bonusOn = tr.dataset.bonus==='1';
+      const valorBonus = bonusOn? bonus: 0;
+      const salario = faturado*(pct/100);
+      const receber = salario + valorBonus;
+      tr.querySelector('.val-receber').textContent = euro(receber);
+      tr.querySelector('.val-bonus').textContent = euro(valorBonus);
+      tr.querySelector('.val-fat').textContent = euro(faturado);
+      tr.dataset.faturado = String(faturado);
+      tr.dataset.salario = String(salario);
+      tr.dataset.valorBonus = String(valorBonus);
+      tr.dataset.receber = String(receber);
+    }
+
+    function recalcAll(){ [...gid('tbody').children].forEach(recalcRow); recalcTotals(); }
+    function setText(id, txt){ const el = gid(id); if(el) el.textContent = txt; }
+
+    function recalcTotals(){
+      let totF=0, totSal=0, totPrem=0, totReceber=0;
+      [...gid('tbody').children].forEach(tr=>{
+        totF+=Number(tr.dataset.faturado||0);
+        totSal+=Number(tr.dataset.salario||0);
+        totPrem+=Number(tr.dataset.valorBonus||0);
+        totReceber+=Number(tr.dataset.receber||0);
+      });
+      const totSalPrem = totSal + totPrem;
+      const totLucro = totF - totSal - totPrem;
+      setText('totFaturado', euro(totF));
+      setText('totSalarios', euro(totSal));
+      setText('totPremios', euro(totPrem));
+      setText('totSalariosPremios', euro(totSalPrem));
+      setText('totLucro', euro(totLucro));
+      setText('colTotFaturado', euro(totF));
+      setText('colTotReceber', euro(totReceber));
+      setText('colTotBonus', euro(totPrem));
+    }
+
+    // ====== Retiradas ======
+    function autoFillDateTime(row){
+      const now = new Date();
+      const date = now.toISOString().slice(0,10);
+      const time = now.toTimeString().slice(0,5);
+      const dateInput = row.querySelector('.w-date');
+      const timeInput = row.querySelector('.w-time');
+      if(dateInput){ dateInput.value = date; dateInput.readOnly = true; }
+      if(timeInput){ timeInput.value = time; timeInput.readOnly = true; }
+    }
+
+    function addWithdrawRow(){
+      const grid = gid('wgrid');
+      const row = document.createElement('div'); row.className='row';
+      row.innerHTML = `
+        <input type="date" class="input w-date" required readonly />
+        <input type="time" class="input w-time" required readonly />
+        <input type="number" step="0.01" inputmode="decimal" class="input w-atual" placeholder="0" required />
+        <input type="number" step="0.01" inputmode="decimal" class="input w-valor" placeholder="0" required />
+        <input type="text" class="input w-motivo" placeholder="motivo" required />
+        <input type="text" class="input w-resp" placeholder="responsável" required />
+        <div class="x-actions"><button class="btn-secondary w-del">Remover</button></div>`;
+      autoFillDateTime(row);
+      row.querySelector('.w-del').onclick=()=>{row.remove(); calcWithdrawTotal();};
+      row.querySelectorAll('.w-date,.w-time,.w-atual,.w-valor,.w-motivo,.w-resp').forEach(i=> i.oninput = calcWithdrawTotal);
+      grid.appendChild(row); calcWithdrawTotal();
+    }
+
+    function collectWithdraws(){
+      const rows = [...gid('wgrid').querySelectorAll('.row')];
+      return rows.map(r=>({
+        data: r.querySelector('.w-date').value,
+        hora: r.querySelector('.w-time').value,
+        atual: parseFloat(r.querySelector('.w-atual').value||'0'),
+        valor: parseFloat(r.querySelector('.w-valor').value||'0'),
+        motivo: r.querySelector('.w-motivo').value.trim(),
+        resp: r.querySelector('.w-resp').value.trim(),
+        el: r
+      })).filter(r=> r.data && r.hora && r.atual>0 && r.valor>0 && r.motivo && r.resp);
+    }
+
+    function validateWithdrawsStrict(){
+      const rows = [...gid('wgrid').querySelectorAll('.row')];
+      const errors = [];
+      rows.forEach((row, idx)=>{
+        const data = row.querySelector('.w-date').value;
+        const hora = row.querySelector('.w-time').value;
+        const atual = parseFloat(row.querySelector('.w-atual').value||'0');
+        const valor = parseFloat(row.querySelector('.w-valor').value||'0');
+        const motivoEl = row.querySelector('.w-motivo');
+        const respEl = row.querySelector('.w-resp');
+        const motivo = (motivoEl.value||'').trim();
+        const resp = (respEl.value||'').trim();
+        const hasCore = data || hora || atual>0 || valor>0 || motivo || resp;
+        [motivoEl, respEl].forEach(el=>{ el.setCustomValidity(''); el.classList.remove('invalid'); });
+        if(hasCore){
+          if(!data) errors.push(`Linha ${idx+1}: Data obrigatória.`);
+          if(!hora) errors.push(`Linha ${idx+1}: Hora obrigatória.`);
+          if(!(atual>0)) errors.push(`Linha ${idx+1}: Valor Atual deve ser > 0.`);
+          if(!(valor>0)) errors.push(`Linha ${idx+1}: Valor Retirado deve ser > 0.`);
+          if(!motivo){ motivoEl.setCustomValidity('Obrigatório'); motivoEl.classList.add('invalid'); errors.push(`Linha ${idx+1}: Motivo obrigatório.`); }
+          if(!resp){ respEl.setCustomValidity('Obrigatório'); respEl.classList.add('invalid'); errors.push(`Linha ${idx+1}: Responsável obrigatório.`); }
+        }
+      });
+      if(errors.length){
+        const firstInvalid = document.querySelector('.row .invalid');
+        if(firstInvalid) firstInvalid.reportValidity();
+      }
+      return errors;
+    }
+
+    function calcWithdrawTotal(){
+      const list = collectWithdraws();
+      const tot = list.reduce((s,r)=>s+r.valor,0);
+      let saldoAtual = 0;
+      const allRows = [...document.querySelectorAll('#wgrid .row')];
+      for(const r of allRows){
+        const n = parseFloat((r.querySelector('.w-atual')||{}).value||'0');
+        if(n>0){ saldoAtual = n; break; }
+      }
+      const novoSaldo = Math.max(saldoAtual - tot, 0);
+      setText('sumTotalRet', euro(tot));
+      setText('sumSaldoAtual', euro(saldoAtual));
+      setText('sumNovoSaldo', euro(novoSaldo));
+      return {list, tot, saldoAtual, novoSaldo};
+    }
+
+    // ====== Discord embeds ======
+    function buildPaymentsEmbed(){
+      const rows = [...gid('tbody').children].map(tr=>({
+        name: tr.querySelector('.emp-name')?.textContent||'',
+        cargo: tr.querySelector('.emp-role .role-badge')?.textContent?.trim()||'',
+        iban: tr.dataset.iban || tr.querySelector('.emp-iban')?.textContent?.trim()||'',
+        faturado: Number(tr.dataset.faturado||0),
+        salario: Number(tr.dataset.salario||0),
+        receber: Number(tr.dataset.receber||0),
+        bonusOn: tr.dataset.bonus==='1',
+        bonusVal: Number(tr.dataset.valorBonus||0)
+      })).filter(r=> (r.faturado>0) || (r.bonusOn && r.bonusVal>0));
+      if(rows.length===0) return null;
+      const totalF=rows.reduce((s,r)=>s+r.faturado,0);
+      const totalSal=rows.reduce((s,r)=>s+r.salario,0);
+      const totalB=rows.reduce((s,r)=>s+r.bonusVal,0);
+      const totalSP= totalSal + totalB;
+      const totalLucro = totalF - totalSP;
+      const fields = rows.map(r=>({
+        name: `${r.bonusOn?'✨':''} ${r.name||'—'}`,
+        value: `${r.cargo?`👔 Cargo: ${r.cargo}\n`:''}${r.iban?`🏦 IBAN: ${r.iban}\n`:''}💼 Faturado: ${euro(r.faturado)}\n🧮 Salário: ${euro(r.salario)}${r.bonusOn?`\n🎁 Bónus: ${euro(r.bonusVal)}`:''}\n💰 A Receber: ${euro(r.receber)}`,
+        inline:false
+      }));
+      fields.push({name:'Totais', value:`**Total Faturado:** ${euro(totalF)}\n**Total a Pagar (Salários):** ${euro(totalSal)}\n**Total a Pagar em Prémios:** ${euro(totalB)}\n**Total a Pagar (Salários + Prémios):** ${euro(totalSP)}\n**Lucros:** ${euro(totalLucro)}`});
+      return { title:'📊 Pagamentos', color:26809, description:`Percentual: ${gid('pct').value||0}% | Bónus padrão: ${euro(parseFloat(gid('bonus').value||0))}`, fields, footer:{text:'RedLine Performance'}, timestamp:new Date().toISOString() };
+    }
+
+    function buildWithdrawsEmbed(){
+      const {list, tot, saldoAtual, novoSaldo} = calcWithdrawTotal();
+      if(!list.length) return null;
+      const fields = list.map((r,i)=>({
+        name: `#${i+1} — ${r.data} ${r.hora} · ${r.resp}`,
+        value: `💬 ${r.motivo}\n💼 Saldo Atual (linha): ${euro(r.atual)}\n💸 Retirado: ${euro(r.valor)}`,
+        inline:false
+      }));
+      fields.push({name:'Totais', value:`**Total Retirado:** ${euro(tot)}\n**Saldo Atual (primeira linha):** ${euro(saldoAtual)}\n**Novo Saldo (aprox.):** ${euro(novoSaldo)}`});
+      return { title:'🏦 Retiradas', color:26809, description:'Resumo das retiradas registadas', fields, footer:{text:'RedLine Performance'}, timestamp:new Date().toISOString() };
+    }
+
+    async function sendDiscord(payload){
+      if(!WEBHOOK_URL){ alert('Defina o WEBHOOK_URL para enviar ao Discord.'); return; }
+      const res=await fetch(WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+    }
+
+    // ====== Boot ======
+    document.addEventListener('DOMContentLoaded', function(){
+      // relógio
+      setInterval(()=>{const el=gid('clock'); if(el) el.textContent=new Date().toLocaleString('pt-PT');},1000);
+
+      // construir tabela a partir da lista fixa
+      const tbody = gid('tbody');
+      tbody.innerHTML='';
+      (EMPLOYEES||[]).forEach(e=> tbody.appendChild(makeRow(e)));
+      recalcAll();
+
+      // Retiradas
+      document.querySelectorAll('#wgrid .row').forEach(autoFillDateTime);
+      const addBtn = document.getElementById('addW'); if(addBtn) addBtn.onclick=()=> addWithdrawRow();
+      document.querySelectorAll('#wgrid .row input').forEach(i=> i.addEventListener('input', calcWithdrawTotal));
+      calcWithdrawTotal();
+
+      // Config
+      const pctEl = document.getElementById('pct'); const bonusEl=document.getElementById('bonus');
+      if(pctEl && bonusEl){ pctEl.oninput=bonusEl.oninput=()=>recalcAll(); }
+
+      // Emitir
+      const emitW = document.getElementById('emitW'); if(emitW) emitW.onclick=async()=>{
+        const errs = validateWithdrawsStrict();
+        if(errs.length){ alert('Corrige os seguintes erros antes de emitir:\n\n'+errs.join('\n')); return; }
+        const w = buildWithdrawsEmbed();
+        if(!w){ alert('Nada para enviar nas retiradas.'); return; }
+        try{ await sendDiscord({username:'RedLine Performance', embeds:[w]}); alert('✅ Retiradas enviadas!'); }
+        catch(e){ alert('Erro ao enviar: '+e.message); }
+      };
+
+      const emit = document.getElementById('emit'); if(emit) emit.onclick=async()=>{
+        recalcAll();
+        const p = buildPaymentsEmbed();
+        if(!p){ alert('Nada para enviar nos salários: preenche valores antes de emitir.'); return; }
+        try{ await sendDiscord({username:'RedLine Performance', embeds:[p]}); alert('✅ Pagamentos enviados!'); }
+        catch(e){ alert('Erro ao enviar: '+e.message); }
+      };
+    });
+  </script>
+</body>
+</html>
